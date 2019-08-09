@@ -97,7 +97,7 @@ namespace JiraExport
                 var userpass = "";
                 var jiraurl = "";
 
-                var jiraSettings = new JiraSettings("", "", "", config.SourceProject)
+                var jiraSettings = new JiraSettings(useremail, userpass, jiraurl, config.SourceProject)
                 {
                     BatchSize = config.BatchSize,
                     UserMappingFile = config.UserMappingFile != null ? Path.Combine(migrationWorkspace, config.UserMappingFile) : string.Empty,
