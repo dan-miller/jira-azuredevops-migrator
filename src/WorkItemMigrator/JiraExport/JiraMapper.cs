@@ -500,7 +500,21 @@ namespace JiraExport
 
         private object MapRank(string rank)
         {
-            return 1;
+            string result = "";
+
+            foreach (char c in rank.ToCharArray())
+            {
+                if (char.IsNumber(c))
+                {
+                    result += c.ToString();
+                }
+                else if (char.IsLetter(c))
+                {
+                    result += (c % 32).ToString();
+                }
+            }
+
+            return result;
         }
 
         private void MapLastDescription(List<WiRevision> revisions, JiraItem issue)
