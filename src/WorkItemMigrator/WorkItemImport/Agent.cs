@@ -818,6 +818,10 @@ namespace WorkItemImport
                 Logger.Log(ex, $"Failed to import revisions for '{wi.Id}'.");
                 return false;
             }
+            finally
+            {
+                Thread.Sleep(50);
+            }
         }
 
         private void EnsureClasificationFields(Migration.WIContract.WiRevision rev)
