@@ -48,7 +48,7 @@ namespace WorkItemImport
             {
                 bool forceFresh = forceOption.HasValue();
 
-                if (configOption.HasValue())
+                if (true || configOption.HasValue())
                 {
                     ExecuteMigration(tokenOption, urlOption, configOption, forceFresh);
                 }
@@ -72,7 +72,7 @@ namespace WorkItemImport
 
             try
             {
-                string configFileName = configFile.Value();
+                string configFileName = "c:\\path\\to\\file\\config-scrum.json";
                 ConfigReaderJson configReaderJson = new ConfigReaderJson(configFileName);
                 config = configReaderJson.Deserialize();
 
@@ -80,7 +80,7 @@ namespace WorkItemImport
 
                 // connection settings for Azure DevOps/TFS:
                 // full base url incl https, name of the project where the items will be migrated (if it doesn't exist on destination it will be created), personal access token
-                var settings = new Settings(url.Value(), config.TargetProject, token.Value())
+                var settings = new Settings("https://xxxxxx.visualstudio.com", config.TargetProject, "TOKEN GOES HERE")
                 {
                     BaseAreaPath = config.BaseAreaPath ?? string.Empty, // Root area path that will prefix area path of each migrated item
                     BaseIterationPath = config.BaseIterationPath ?? string.Empty, // Root iteration path that will prefix each iteration
