@@ -314,6 +314,7 @@ namespace JiraExport
                                 break;
                             case "MapRendered":
                                 value = r => MapRenderedValue(r, item.Source);
+                                break;
                             case "MapRank":
                                 value = IfChanged<string>(item.Source, isCustomField, MapRank);
                                 break;
@@ -536,35 +537,6 @@ namespace JiraExport
             }
 
             return result;
-        }
-
-        private void MapLastDescription(List<WiRevision> revisions, JiraItem issue)
-        {
-            var descFieldName = issue.Type == "Bug" ? "Microsoft.VSTS.TCM.ReproSteps" : "System.Description";
-
-            var lastDescUpdateRev = ((IEnumerable<WiRevision>)revisions)
-                                        .Reverse()
-                                        .FirstOrDefault(r => r.Fields.Any(i => i.ReferenceName.Equals(descFieldName, StringComparison.InvariantCultureIgnoreCase)));
-
-            if (lastDescUpdateRev != null)
-            {
-                var lastDescUpdate = lastDescUpdateRev?.Fields?.FirstOrDefault(i => i.ReferenceName.Equals(descFieldName, StringComparison.InvariantCultureIgnoreCase));
-                var renderedDescription = MapRenderedDescription(issue);
-
-                if (lastDescUpdate == null && !string.IsNullOrWhiteSpace(renderedDescription))
-                {
-                    lastDescUpdate = new WiField() { ReferenceName = descFieldName, Value = renderedDescription };
-                    lastDescUpdateRev = revisions.First();
-                    lastDescUpdateRev.Fields.Add(lastDescUpdate);
-                }
-
-                if (lastDescUpdate != null)
-                {
-                    lastDescUpdate.Value = renderedDescription;
-                }
-
-                lastDescUpdateRev.AttachmentReferences = true;
-            }
         }
 
         private string BuildDescriptionValue(object value, JiraRevision revision)
