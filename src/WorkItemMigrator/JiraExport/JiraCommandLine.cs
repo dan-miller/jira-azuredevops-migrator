@@ -44,7 +44,10 @@ namespace JiraExport
             commandLineApplication.OnExecute(() =>
             {
                 bool forceFresh = forceOption.HasValue();
-
+#if DEBUG
+                forceFresh = true;
+                ExecuteMigration(null, null, null, null, forceFresh);
+#else
                 if (configOption.HasValue())
                 {
                     ExecuteMigration(userOption, passwordOption, urlOption, configOption, forceFresh);
@@ -53,7 +56,7 @@ namespace JiraExport
                 {
                     commandLineApplication.ShowHelp();
                 }
-
+#endif
                 return 0;
             });
         }
@@ -67,8 +70,24 @@ namespace JiraExport
 
             try
             {
-                string configFileName = configFile.Value();
-                ConfigReaderJson configReaderJson = new ConfigReaderJson(configFileName);
+                var s_user = "";
+                var s_password = "";
+                var s_url = "";
+                var s_configFile = "";
+
+#if DEBUG
+                s_user = "first.last@domain.com";
+                s_password = "password123";
+                s_url = "https://jira.org.com";
+                s_configFile = "c:\\path\\to\\file\\config-scrum.json";
+#else
+                s_user = configFile.Value();
+                s_password = password.Value();
+                s_url = url.Value();
+                s_configFile = configFile.Value();
+#endif
+
+                ConfigReaderJson configReaderJson = new ConfigReaderJson(s_configFile);
                 var config = configReaderJson.Deserialize();
 
                 InitSession(config);
@@ -79,7 +98,7 @@ namespace JiraExport
 
                 var downloadOptions = (DownloadOptions)config.DownloadOptions;
 
-                var jiraSettings = new JiraSettings(user.Value(), password.Value(), url.Value(), config.SourceProject)
+                var jiraSettings = new JiraSettings(s_user, s_password, s_url, config.SourceProject)
                 {
                     BatchSize = config.BatchSize,
                     UserMappingFile = config.UserMappingFile != null ? Path.Combine(migrationWorkspace, config.UserMappingFile) : string.Empty,
@@ -91,7 +110,7 @@ namespace JiraExport
 
                 itemsCount = jiraProvider.GetItemCount(jiraSettings.JQL);
 
-                BeginSession(configFileName, config, forceFresh, jiraProvider, itemsCount);
+                BeginSession(configFile.Value(), config, forceFresh, jiraProvider, itemsCount);
 
                 jiraSettings.EpicLinkField = jiraProvider.GetCustomId(config.EpicLinkField);
                 if (string.IsNullOrEmpty(jiraSettings.EpicLinkField))
