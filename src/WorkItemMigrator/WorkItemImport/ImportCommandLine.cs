@@ -48,7 +48,11 @@ namespace WorkItemImport
             {
                 bool forceFresh = forceOption.HasValue();
 
-                if (true || configOption.HasValue())
+#if DEBUG
+                forceFresh = true;
+                ExecuteMigration(null, null, null, forceFresh);
+#else
+                if (configOption.HasValue())
                 {
                     ExecuteMigration(tokenOption, urlOption, configOption, forceFresh);
                 }
@@ -56,6 +60,7 @@ namespace WorkItemImport
                 {
                     commandLineApplication.ShowHelp();
                 }
+#endif
 
                 return 0;
             });
@@ -72,15 +77,27 @@ namespace WorkItemImport
 
             try
             {
-                string configFileName = "c:\\path\\to\\file\\config-scrum.json";
-                ConfigReaderJson configReaderJson = new ConfigReaderJson(configFileName);
+                var s_configFile = "";
+                var s_adoUrl = "";
+                var s_adoToken = "";
+#if DEBUG
+                s_configFile = "c:\\path\\to\\file\\config-scrum.json";
+                s_adoUrl = "https://dev.azure.com/org";
+                s_adoToken = "token";
+#else
+                s_configFile = configFile.Value();
+                s_adoUrl = url.Value();
+                s_adoToken = token.Value();
+#endif
+
+                ConfigReaderJson configReaderJson = new ConfigReaderJson(s_configFile);
                 config = configReaderJson.Deserialize();
 
                 var context = MigrationContext.Init("wi-import", config.Workspace, config.LogLevel, forceFresh);
 
                 // connection settings for Azure DevOps/TFS:
                 // full base url incl https, name of the project where the items will be migrated (if it doesn't exist on destination it will be created), personal access token
-                var settings = new Settings("https://xxxxxx.visualstudio.com", config.TargetProject, "TOKEN GOES HERE")
+                var settings = new Settings(s_adoUrl, config.TargetProject, s_adoToken)
                 {
                     BaseAreaPath = config.BaseAreaPath ?? string.Empty, // Root area path that will prefix area path of each migrated item
                     BaseIterationPath = config.BaseIterationPath ?? string.Empty, // Root iteration path that will prefix each iteration
@@ -103,7 +120,7 @@ namespace WorkItemImport
                 itemCount = plan.ReferenceQueue.AsEnumerable().Select(x => x.OriginId).Distinct().Count();
                 revisionCount = plan.ReferenceQueue.Count;
 
-                BeginSession(configFileName, config, forceFresh, agent, itemCount, revisionCount);
+                BeginSession(configFile.Value(), config, forceFresh, agent, itemCount, revisionCount);
 
                 while (plan.TryPop(out ExecutionPlan.ExecutionItem executionItem))
                 {
